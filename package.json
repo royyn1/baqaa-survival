@@ -1,0 +1,60 @@
+{
+  "name": "baqaa-game",
+  "version": "1.0.0",
+  "description": "لعبة بقاء متطورة ذاتياً",
+  "main": "server.js",
+  "private": true,
+  "scripts": {
+    "start": "node server.js",
+    "dev": "nodemon server.js",
+    "build": "webpack --mode production",
+    "test": "jest",
+    "optimize": "node scripts/optimize.js",
+    "analyze": "node scripts/analyze.js",
+    "update-ai": "node scripts/update-ai.js",
+    "start-multiplayer": "node multiplayer_server.js",
+    "generate-keys": "openssl req -nodes -new -x509 -keyout server.key -out server.cert",
+    "build-android": "npx cap add android && npx cap sync android",
+    "open-android": "npx cap open android"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/yourusername/baqaa-game.git"
+  },
+  "keywords": [
+    "game",
+    "survival",
+    "ai",
+    "self-learning"
+  ],
+  "author": "Your Name",
+  "license": "MIT",
+  "dependencies": {
+    "express": "^4.17.1",
+    "three": "^0.137.0",
+    "socket.io": "^4.4.1",
+    "tensorflow.js": "^3.13.0",
+    "uuid": "^8.3.2",
+    "webpack": "^5.65.0",
+    "ws": "^8.2.3",
+    "jsonwebtoken": "^8.5.1",
+    "bcrypt": "^5.0.1",
+    "helmet": "^4.6.0",
+    "cors": "^2.8.5",
+    "express-rate-limit": "^5.3.0",
+    "@capacitor/core": "^5.0.0",
+    "@capacitor/android": "^5.0.0",
+    "@capacitor/cli": "^5.0.0"
+  },
+  "devDependencies": {
+    "@babel/core": "^7.16.7",
+    "@babel/preset-env": "^7.16.7",
+    "babel-loader": "^8.2.3",
+    "jest": "^27.4.7",
+    "nodemon": "^2.0.15",
+    "webpack-cli": "^4.9.1"
+  },
+  "engines": {
+    "node": ">=14.0.0"
+  }
+}

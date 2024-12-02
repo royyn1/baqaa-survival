@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>لعبة البقاء على قيد الحياة</title>
+    <style>
+        body { margin: 0; }
+        canvas { display: block; }
+        #instructions {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            color: white;
+            font-family: Arial, sans-serif;
+            background: rgba(0,0,0,0.7);
+            padding: 10px;
+            border-radius: 5px;
+            direction: rtl;
+        }
+        #chat {
+            position: absolute;
+            bottom: 10px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 80%;
+            max-width: 600px;
+            background: rgba(0,0,0,0.7);
+            color: white;
+            padding: 10px;
+            border-radius: 5px;
+            display: none;
+        }
+        #inventory {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            color: white;
+            font-family: Arial, sans-serif;
+            background: rgba(0,0,0,0.7);
+            padding: 10px;
+            border-radius: 5px;
+        }
+        .mobile-controls {
+            position: absolute;
+            bottom: 20px;
+            right: 20px;
+            display: none;
+        }
+        @media (max-width: 768px) {
+            .mobile-controls {
+                display: block;
+            }
+        }
+        .control-btn {
+            width: 50px;
+            height: 50px;
+            background: rgba(255,255,255,0.3);
+            border: 2px solid white;
+            border-radius: 25px;
+            color: white;
+            font-size: 20px;
+            margin: 5px;
+            touch-action: manipulation;
+        }
+    </style>
+</head>
+<body>
+    <div id="instructions">
+        الأزرار:<br>
+        WASD / أسهم: التحرك<br>
+        مسافة: القفز<br>
+        E: توسيع الطوف<br>
+        نقر: التقاط/استخدام<br>
+        T: المحادثة
+    </div>
+    <div id="inventory">
+        الموارد:<br>
+        خشب: <span id="wood">0</span><br>
+        معدن: <span id="metal">0</span><br>
+        طعام: <span id="food">0</span>
+    </div>
+    <div id="chat">
+        <input type="text" id="chat-input" placeholder="اكتب رسالتك هنا..." style="width: 80%">
+        <button onclick="sendMessage()">إرسال</button>
+    </div>
+    <div class="mobile-controls">
+        <button class="control-btn" id="up">↑</button>
+        <button class="control-btn" id="left">←</button>
+        <button class="control-btn" id="down">↓</button>
+        <button class="control-btn" id="right">→</button>
+        <button class="control-btn" id="action">E</button>
+    </div>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="game.js"></script>
+</body>
+</html>
