@@ -3,6 +3,8 @@
 import GameEvolution from '../ai/game_evolution.js';
 import GameIntegration from '../ai/integration.js';
 import AutonomousAI from '../ai/autonomous_ai.js';
+import * as THREE from 'three';
+import TWEEN from '@tweenjs/tween.js';
 
 class BaqaaGame {
     constructor() {
@@ -52,6 +54,9 @@ class BaqaaGame {
         this.setupEventListeners();
         this.loadResources();
         this.showMainMenu();
+        
+        // تهيئة الكاميرا
+        this.initCamera();
     }
     
     setupEventListeners() {
@@ -64,6 +69,11 @@ class BaqaaGame {
         if (startButton) {
             startButton.addEventListener('click', () => this.startGame());
         }
+        
+        // أزرار التحكم في المنظور
+        document.querySelectorAll('.viewButton').forEach(btn => {
+            btn.addEventListener('click', () => this.changeView(btn.getAttribute('data-view')));
+        });
     }
     
     loadResources() {
@@ -448,6 +458,77 @@ class BaqaaGame {
             progressionRate: this.players.getProgressionRate(),
             socialInteractions: this.players.getSocialStats()
         };
+    }
+
+    initCamera() {
+        this.camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+        this.updateCameraPosition();
+    }
+
+    updateCameraPosition() {
+        const offset = this.cameraOffset[this.currentView];
+        if (this.player) {
+            this.camera.position.x = this.player.position.x + offset.x;
+            this.camera.position.y = this.player.position.y + offset.y;
+            this.camera.position.z = this.player.position.z + offset.z;
+            
+            if (this.currentView === 'first') {
+                // منظور الشخص الأول
+                this.camera.lookAt(
+                    this.player.position.x + Math.sin(this.player.rotation.y),
+                    this.player.position.y + 1.6,
+                    this.player.position.z - Math.cos(this.player.rotation.y)
+                );
+            } else {
+                // منظور الشخص الثاني والثالث
+                this.camera.lookAt(this.player.position);
+            }
+        }
+    }
+
+    changeView(view) {
+        if (this.currentView !== view) {
+            this.currentView = view;
+            // تحديث الأزرار النشطة
+            document.querySelectorAll('.viewButton').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            document.querySelector(`[onclick="changeView('${view}')"]`).classList.add('active');
+            
+            // تحديث موضع الكاميرا بسلاسة
+            const offset = this.cameraOffset[view];
+            new TWEEN.Tween(this.camera.position)
+                .to({
+                    x: this.player.position.x + offset.x,
+                    y: this.player.position.y + offset.y,
+                    z: this.player.position.z + offset.z
+                }, 1000)
+                .easing(TWEEN.Easing.Quadratic.InOut)
+                .start();
+        }
+    }
+
+    animate() {
+        requestAnimationFrame(() => this.animate());
+        TWEEN.update();
+        this.updateCameraPosition();
+        this.renderer.render(this.scene, this.camera);
+    }
+
+    get cameraOffset() {
+        return {
+            first: { x: 0, y: 1.6, z: 0 },
+            second: { x: 0, y: 2, z: 3 },
+            third: { x: 0, y: 5, z: 10 }
+        };
+    }
+
+    get currentView() {
+        return this._currentView;
+    }
+
+    set currentView(view) {
+        this._currentView = view;
     }
 }
 

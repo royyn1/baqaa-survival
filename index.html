@@ -49,6 +49,34 @@
             right: 20px;
             display: none;
         }
+        #viewControls {
+            position: absolute;
+            bottom: 20px;
+            right: 20px;
+            background: rgba(0,0,0,0.8);
+            padding: 10px;
+            border-radius: 8px;
+            direction: rtl;
+            color: white;
+            font-family: Arial, sans-serif;
+            z-index: 1000;
+        }
+        .viewButton {
+            background: #4CAF50;
+            border: none;
+            color: white;
+            padding: 8px 16px;
+            margin: 0 5px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-family: inherit;
+        }
+        .viewButton:hover {
+            background: #45a049;
+        }
+        .viewButton.active {
+            background: #357a38;
+        }
         @media (max-width: 768px) {
             .mobile-controls {
                 display: block;
@@ -85,6 +113,11 @@
     <div id="chat">
         <input type="text" id="chat-input" placeholder="اكتب رسالتك هنا..." style="width: 80%">
         <button onclick="sendMessage()">إرسال</button>
+    </div>
+    <div id="viewControls">
+        <button class="viewButton active" onclick="changeView('first')">منظور أول</button>
+        <button class="viewButton" onclick="changeView('second')">منظور ثاني</button>
+        <button class="viewButton" onclick="changeView('third')">منظور ثالث</button>
     </div>
     <div class="mobile-controls">
         <button class="control-btn" id="up">↑</button>
