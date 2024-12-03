@@ -1,265 +1,167 @@
-// نظام التطور التلقائي للعبة
+import { AutonomousAI } from './autonomous_ai.js';
+import { SelfLearningAI } from './self_learning_ai.js';
+import { ErrorHandler } from '../utils/error-handler.js';
 
 class GameEvolution {
     constructor() {
-        this.evolutionState = {
-            version: '1.0.0',
-            lastUpdate: Date.now(),
-            features: new Map(),
-            metrics: new Map(),
-            playerFeedback: []
+        this.autonomousAI = new AutonomousAI();
+        this.selfLearningAI = new SelfLearningAI();
+        this.errorHandler = new ErrorHandler();
+        this.evolutionMetrics = {
+            playerBehavior: {},
+            gameBalance: {},
+            resourceUtilization: {},
+            aiPerformance: {}
         };
-
-        this.config = {
-            updateInterval: 24 * 60 * 60 * 1000, // يوم واحد
-            apiEndpoint: 'https://api.baqaa.game/evolution',
-            featureFlags: {
-                autoBalance: true,
-                contentGeneration: true,
-                difficultyAdjustment: true
-            }
-        };
-
-        this.init();
+        this.lastUpdate = Date.now();
+        this.updateInterval = 300000; // 5 minutes
+        this.startContinuousEvolution();
     }
 
-    async init() {
-        console.log('تهيئة نظام التطور التلقائي...');
-        await this.loadCurrentState();
-        this.startEvolutionLoop();
-        this.setupMetricsCollection();
-        this.initializeFeatureTracking();
-    }
-
-    async loadCurrentState() {
+    async startContinuousEvolution() {
         try {
-            const response = await fetch(`${this.config.apiEndpoint}/state`);
-            const state = await response.json();
-            this.evolutionState = {
-                ...this.evolutionState,
-                ...state
-            };
-            console.log('تم تحميل حالة التطور الحالية');
+            while (true) {
+                await this.evolveGame();
+                await new Promise(resolve => setTimeout(resolve, this.updateInterval));
+            }
         } catch (error) {
-            console.log('بدء بحالة افتراضية للتطور');
+            this.errorHandler.logError(error, { component: 'GameEvolution', method: 'startContinuousEvolution' });
+            // إعادة تشغيل النظام في حالة حدوث خطأ
+            setTimeout(() => this.startContinuousEvolution(), 5000);
         }
-    }
-
-    startEvolutionLoop() {
-        setInterval(() => {
-            this.evolveGame();
-        }, this.config.updateInterval);
     }
 
     async evolveGame() {
-        console.log('بدء دورة تطور جديدة...');
-
-        // تحليل البيانات الحالية
-        const analysis = this.analyzeGameState();
-
-        // توليد تحسينات جديدة
-        const improvements = await this.generateImprovements(analysis);
-
-        // تطبيق التحسينات
-        await this.applyImprovements(improvements);
-
-        // تحديث النسخة
-        this.updateVersion();
-
-        // مزامنة مع الخادم
-        await this.syncWithServer();
-    }
-
-    analyzeGameState() {
-        return {
-            playerMetrics: this.analyzePlayerMetrics(),
-            gameBalance: this.analyzeGameBalance(),
-            performance: this.analyzePerformance(),
-            engagement: this.analyzePlayerEngagement()
-        };
-    }
-
-    analyzePlayerMetrics() {
-        const metrics = Array.from(this.metrics.entries());
-        return {
-            averagePlayTime: this.calculateAveragePlayTime(metrics),
-            completionRates: this.calculateCompletionRates(metrics),
-            difficultyDistribution: this.analyzeDifficulty(metrics),
-            playerProgress: this.analyzeProgress(metrics)
-        };
-    }
-
-    async generateImprovements(analysis) {
-        const improvements = [];
-
-        // تحسين توازن اللعبة
-        if (analysis.gameBalance.needsAdjustment) {
-            improvements.push(await this.generateBalanceImprovements(analysis.gameBalance));
-        }
-
-        // تحسين الأداء
-        if (analysis.performance.issuesDetected) {
-            improvements.push(await this.generatePerformanceImprovements(analysis.performance));
-        }
-
-        // إضافة محتوى جديد
-        if (this.shouldGenerateNewContent(analysis)) {
-            improvements.push(await this.generateNewContent(analysis));
-        }
-
-        return improvements;
-    }
-
-    async generateBalanceImprovements(balanceData) {
-        return {
-            type: 'balance',
-            changes: {
-                difficulty: this.calculateOptimalDifficulty(balanceData),
-                rewards: this.optimizeRewards(balanceData),
-                progression: this.adjustProgression(balanceData)
-            }
-        };
-    }
-
-    async generateNewContent(analysis) {
-        const contentTypes = ['missions', 'items', 'environments', 'challenges'];
-        const newContent = [];
-
-        for (const type of contentTypes) {
-            if (this.needsNewContent(type, analysis)) {
-                const content = await this.createContent(type, analysis);
-                newContent.push(content);
-            }
-        }
-
-        return {
-            type: 'content',
-            additions: newContent
-        };
-    }
-
-    async createContent(type, analysis) {
-        switch (type) {
-            case 'missions':
-                return this.generateNewMission(analysis);
-            case 'items':
-                return this.generateNewItems(analysis);
-            case 'environments':
-                return this.generateNewEnvironment(analysis);
-            case 'challenges':
-                return this.generateNewChallenge(analysis);
-            default:
-                return null;
-        }
-    }
-
-    async generateNewMission(analysis) {
-        const missionTemplate = {
-            name: this.generateMissionName(),
-            difficulty: this.calculateAppropriateLevel(analysis),
-            objectives: this.generateObjectives(),
-            rewards: this.calculateRewards(),
-            environment: this.selectEnvironment()
-        };
-
-        return this.validateAndEnhanceMission(missionTemplate);
-    }
-
-    async applyImprovements(improvements) {
-        for (const improvement of improvements) {
-            try {
-                switch (improvement.type) {
-                    case 'balance':
-                        await this.applyBalanceChanges(improvement.changes);
-                        break;
-                    case 'content':
-                        await this.deployNewContent(improvement.additions);
-                        break;
-                    case 'performance':
-                        await this.applyPerformanceOptimizations(improvement.optimizations);
-                        break;
-                }
-
-                // تسجيل التغييرات
-                this.logEvolutionChange(improvement);
-
-            } catch (error) {
-                console.error('خطأ في تطبيق التحسين:', error);
-                await this.reportError(error, improvement);
-            }
-        }
-    }
-
-    async deployNewContent(content) {
-        // تحديث قاعدة البيانات
-        await this.updateDatabase(content);
-
-        // تحديث ملفات اللعبة
-        await this.updateGameFiles(content);
-
-        // إعادة تحميل الموارد
-        await this.reloadGameResources();
-    }
-
-    async syncWithServer() {
         try {
-            const updateData = {
-                version: this.evolutionState.version,
-                changes: this.getRecentChanges(),
-                metrics: Array.from(this.metrics.entries()),
-                timestamp: Date.now()
-            };
-
-            const response = await fetch(`${this.config.apiEndpoint}/sync`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify(updateData)
+            // تحليل سلوك اللاعبين
+            const playerMetrics = await this.analyzePlayerBehavior();
+            
+            // تحسين توازن اللعبة
+            const balanceUpdates = await this.optimizeGameBalance(playerMetrics);
+            
+            // تطوير الذكاء الاصطناعي
+            const aiImprovements = await this.evolveAI(playerMetrics);
+            
+            // إنشاء محتوى جديد
+            const newContent = await this.generateNewContent(playerMetrics);
+            
+            // تطبيق التحديثات
+            await this.applyUpdates({
+                balance: balanceUpdates,
+                ai: aiImprovements,
+                content: newContent
             });
 
-            if (response.ok) {
-                console.log('تمت المزامنة بنجاح');
-                this.clearRecentChanges();
-            }
+            // حفظ البيانات للتحليل المستقبلي
+            this.saveEvolutionData();
+            
+            return true;
         } catch (error) {
-            console.error('خطأ في المزامنة:', error);
+            this.errorHandler.logError(error, { component: 'GameEvolution', method: 'evolveGame' });
+            return false;
         }
     }
 
-    setupMetricsCollection() {
-        // مراقبة سلوك اللاعب
-        this.trackPlayerBehavior();
-        
-        // مراقبة أداء اللعبة
-        this.trackGamePerformance();
-        
-        // جمع التغذية الراجعة
-        this.collectPlayerFeedback();
+    async analyzePlayerBehavior() {
+        const metrics = {
+            playPatterns: await this.selfLearningAI.analyzePlayPatterns(),
+            resourceUsage: await this.selfLearningAI.analyzeResourceUsage(),
+            difficultyAdaptation: await this.selfLearningAI.analyzeDifficultyLevels(),
+            socialInteractions: await this.selfLearningAI.analyzeSocialBehavior()
+        };
+
+        this.evolutionMetrics.playerBehavior = metrics;
+        return metrics;
     }
 
-    trackPlayerBehavior() {
-        window.addEventListener('gameAction', (event) => {
-            this.recordPlayerAction(event.detail);
+    async optimizeGameBalance(playerMetrics) {
+        return await this.autonomousAI.optimizeBalance({
+            resources: playerMetrics.resourceUsage,
+            difficulty: playerMetrics.difficultyAdaptation,
+            progression: this.evolutionMetrics.gameBalance
         });
     }
 
-    recordPlayerAction(action) {
-        const timestamp = Date.now();
-        this.metrics.set(`player_action_${timestamp}`, {
-            type: action.type,
-            context: action.context,
-            result: action.result,
-            timestamp
+    async evolveAI(playerMetrics) {
+        const aiUpdates = await this.selfLearningAI.evolve({
+            playerPatterns: playerMetrics.playPatterns,
+            currentPerformance: this.evolutionMetrics.aiPerformance
         });
+
+        // تحديث استراتيجيات الذكاء الاصطناعي
+        await this.autonomousAI.updateStrategies(aiUpdates);
+        
+        return aiUpdates;
     }
 
-    updateVersion() {
-        const [major, minor, patch] = this.evolutionState.version.split('.').map(Number);
-        this.evolutionState.version = `${major}.${minor}.${patch + 1}`;
-        this.evolutionState.lastUpdate = Date.now();
+    async generateNewContent(playerMetrics) {
+        try {
+            const contentTypes = ['environments', 'challenges', 'items', 'stories'];
+            let newContent = {};
+
+            for (const type of contentTypes) {
+                newContent[type] = await this.autonomousAI.generateContent({
+                    type,
+                    playerMetrics,
+                    existingContent: this.evolutionMetrics.content
+                });
+            }
+
+            return newContent;
+        } catch (error) {
+            this.errorHandler.logError(error, { component: 'GameEvolution', method: 'generateNewContent' });
+            return null;
+        }
+    }
+
+    async applyUpdates(updates) {
+        try {
+            // تطبيق تحديثات توازن اللعبة
+            if (updates.balance) {
+                await this.autonomousAI.applyBalanceUpdates(updates.balance);
+            }
+
+            // تحديث الذكاء الاصطناعي
+            if (updates.ai) {
+                await this.selfLearningAI.applyUpdates(updates.ai);
+            }
+
+            // إضافة المحتوى الجديد
+            if (updates.content) {
+                await this.autonomousAI.implementNewContent(updates.content);
+            }
+
+            // تحديث الإحصائيات
+            this.lastUpdate = Date.now();
+            
+            return true;
+        } catch (error) {
+            this.errorHandler.logError(error, { component: 'GameEvolution', method: 'applyUpdates' });
+            return false;
+        }
+    }
+
+    saveEvolutionData() {
+        const evolutionData = {
+            timestamp: Date.now(),
+            metrics: this.evolutionMetrics,
+            updates: {
+                balance: this.autonomousAI.getLatestUpdates(),
+                ai: this.selfLearningAI.getLatestUpdates()
+            }
+        };
+
+        // حفظ البيانات للتحليل المستقبلي
+        localStorage.setItem('gameEvolutionData', JSON.stringify(evolutionData));
+    }
+
+    getEvolutionStatus() {
+        return {
+            lastUpdate: this.lastUpdate,
+            metrics: this.evolutionMetrics,
+            nextUpdateIn: this.updateInterval - (Date.now() - this.lastUpdate)
+        };
     }
 }
 
-// تصدير النظام
 export default GameEvolution;

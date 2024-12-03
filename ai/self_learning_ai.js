@@ -2,241 +2,180 @@
 
 class SelfLearningAI {
     constructor() {
-        this.knowledge = {
+        this.learningData = {
             patterns: new Map(),
-            solutions: new Map(),
-            learningHistory: []
+            strategies: new Map(),
+            performance: {
+                success: 0,
+                failure: 0,
+                adaptations: 0
+            }
         };
-        
-        this.metrics = {
-            errorsDetected: 0,
-            problemsSolved: 0,
-            learningIterations: 0
-        };
-
-        this.config = {
-            learningRate: 0.01,
-            explorationRate: 0.2,
-            maxMemorySize: 1000000
-        };
-
-        this.init();
+        this.lastUpdate = null;
+        this.initializeLearningSystem();
     }
 
-    async init() {
-        console.log('تهيئة نظام الذكاء الاصطناعي المتطور...');
-        await this.loadBaseKnowledge();
-        this.startContinuousLearning();
-        this.setupErrorDetection();
-        this.initializeWebCommunication();
+    initializeLearningSystem() {
+        this.loadPreviousData();
+        this.setupLearningLoop();
     }
 
-    async loadBaseKnowledge() {
-        try {
-            // تحميل المعرفة الأساسية من قاعدة البيانات
-            const response = await fetch('https://api.baqaa.game/ai/knowledge');
-            const baseKnowledge = await response.json();
-            this.knowledge.patterns = new Map(Object.entries(baseKnowledge.patterns));
-            this.knowledge.solutions = new Map(Object.entries(baseKnowledge.solutions));
-            console.log('تم تحميل المعرفة الأساسية');
-        } catch (error) {
-            console.log('استخدام المعرفة الافتراضية');
-            this.initializeDefaultKnowledge();
+    loadPreviousData() {
+        const savedData = localStorage.getItem('aiLearningData');
+        if (savedData) {
+            const parsed = JSON.parse(savedData);
+            this.learningData = {
+                ...this.learningData,
+                ...parsed
+            };
         }
     }
 
-    initializeDefaultKnowledge() {
-        // المعرفة الافتراضية للنظام
-        const defaultPatterns = {
-            performance: {
-                lowFPS: 'تحليل معدل الإطارات',
-                highLatency: 'تحليل زمن الاستجابة',
-                memoryLeak: 'تحليل استخدام الذاكرة'
-            },
-            gameplay: {
-                playerStuck: 'تحليل موقع اللاعب',
-                aiPathfinding: 'تحليل مسارات الذكاء الاصطناعي',
-                collisionIssues: 'تحليل نظام التصادم'
-            }
-        };
-
-        this.knowledge.patterns = new Map(Object.entries(defaultPatterns));
-    }
-
-    startContinuousLearning() {
+    setupLearningLoop() {
         setInterval(() => {
             this.learn();
-        }, 60000); // التعلم كل دقيقة
-
-        setInterval(() => {
-            this.syncWithMainAI();
-        }, 300000); // المزامنة كل 5 دقائق
+        }, 60000); // تعلم كل دقيقة
     }
 
     async learn() {
-        this.metrics.learningIterations++;
-        
-        // جمع البيانات من اللعبة
-        const gameData = this.collectGameData();
-        
-        // تحليل الأنماط
-        const patterns = this.analyzePatterns(gameData);
-        
-        // البحث عن حلول جديدة
-        await this.searchForSolutions(patterns);
-        
-        // تحديث المعرفة
-        this.updateKnowledge();
-        
-        console.log(`دورة تعلم #${this.metrics.learningIterations} مكتملة`);
-    }
-
-    collectGameData() {
-        return {
-            performance: this.getPerformanceMetrics(),
-            playerBehavior: this.getPlayerBehavior(),
-            systemState: this.getSystemState()
-        };
-    }
-
-    getPerformanceMetrics() {
-        return {
-            fps: this.calculateFPS(),
-            memoryUsage: performance.memory?.usedJSHeapSize,
-            networkLatency: this.measureNetworkLatency()
-        };
-    }
-
-    getPlayerBehavior() {
-        // تحليل سلوك اللاعب
-        return {
-            movements: this.trackPlayerMovements(),
-            interactions: this.trackPlayerInteractions(),
-            decisions: this.analyzePlayerDecisions()
-        };
-    }
-
-    getSystemState() {
-        return {
-            activeEntities: this.countActiveEntities(),
-            resourceUsage: this.measureResourceUsage(),
-            errorLogs: this.collectErrorLogs()
-        };
-    }
-
-    async searchForSolutions(patterns) {
-        for (const pattern of patterns) {
-            if (!this.knowledge.solutions.has(pattern.id)) {
-                try {
-                    // البحث في قواعد البيانات العامة
-                    const solution = await this.searchOnline(pattern);
-                    if (solution) {
-                        this.knowledge.solutions.set(pattern.id, solution);
-                        await this.validateSolution(solution);
-                    }
-                } catch (error) {
-                    console.error('خطأ في البحث عن حلول:', error);
-                }
-            }
-        }
-    }
-
-    async searchOnline(pattern) {
-        // البحث في مصادر متعددة
-        const sources = [
-            'https://api.gamedev.solutions',
-            'https://api.stackoverflow.com',
-            'https://api.github.com'
-        ];
-
-        for (const source of sources) {
-            try {
-                const response = await fetch(`${source}/search`, {
-                    method: 'POST',
-                    body: JSON.stringify({ query: pattern }),
-                    headers: { 'Content-Type': 'application/json' }
-                });
-                
-                if (response.ok) {
-                    return await response.json();
-                }
-            } catch (error) {
-                console.warn(`فشل البحث في ${source}:`, error);
-            }
-        }
-    }
-
-    setupErrorDetection() {
-        // مراقبة الأخطاء في وقت التشغيل
-        window.onerror = (msg, url, line, col, error) => {
-            this.handleError({ msg, url, line, col, error });
-        };
-
-        // مراقبة أداء اللعبة
-        this.monitorGamePerformance();
-        
-        // مراقبة سلوك اللاعبين
-        this.monitorPlayerBehavior();
-    }
-
-    async handleError(error) {
-        this.metrics.errorsDetected++;
-        
-        // تحليل الخطأ
-        const analysis = this.analyzeError(error);
-        
-        // البحث عن حل
-        const solution = await this.findSolution(analysis);
-        
-        // تطبيق الحل إذا كان موثوقاً
-        if (solution && solution.confidence > 0.8) {
-            await this.applySolution(solution);
-            this.metrics.problemsSolved++;
-        }
-        
-        // إرسال التقرير إلى النظام الرئيسي
-        await this.reportToMainAI(error, analysis, solution);
-    }
-
-    async syncWithMainAI() {
         try {
-            const data = {
-                metrics: this.metrics,
-                knowledge: {
-                    patterns: Array.from(this.knowledge.patterns.entries()),
-                    solutions: Array.from(this.knowledge.solutions.entries())
-                },
-                learningHistory: this.knowledge.learningHistory
-            };
+            // تحليل البيانات الحالية
+            const currentPatterns = await this.analyzePlayPatterns();
+            const performance = await this.analyzePerformance();
 
-            const response = await fetch('https://api.baqaa.game/ai/sync', {
-                method: 'POST',
-                body: JSON.stringify(data),
-                headers: { 'Content-Type': 'application/json' }
-            });
+            // تحديث الاستراتيجيات
+            this.updateStrategies(currentPatterns, performance);
 
-            if (response.ok) {
-                const updates = await response.json();
-                this.applyUpdates(updates);
-            }
+            // تطبيق التحسينات
+            await this.applyLearning();
+
+            // حفظ التقدم
+            this.saveLearningProgress();
         } catch (error) {
-            console.error('خطأ في المزامنة مع النظام الرئيسي:', error);
+            console.error('خطأ في عملية التعلم:', error);
         }
     }
 
-    applyUpdates(updates) {
-        if (updates.knowledge) {
-            this.knowledge.patterns = new Map([...this.knowledge.patterns, ...updates.knowledge.patterns]);
-            this.knowledge.solutions = new Map([...this.knowledge.solutions, ...updates.knowledge.solutions]);
-        }
+    async analyzePlayPatterns() {
+        const patterns = {
+            movement: this.analyzeMovementPatterns(),
+            combat: this.analyzeCombatPatterns(),
+            resource: this.analyzeResourceUsage(),
+            social: this.analyzeSocialBehavior()
+        };
 
-        if (updates.config) {
-            this.config = { ...this.config, ...updates.config };
-        }
+        return patterns;
+    }
 
-        console.log('تم تطبيق التحديثات من النظام الرئيسي');
+    analyzeMovementPatterns() {
+        // تحليل أنماط حركة اللاعبين
+        return {
+            preferredPaths: this.calculatePreferredPaths(),
+            avoidedAreas: this.identifyAvoidedAreas(),
+            explorationRate: this.calculateExplorationRate()
+        };
+    }
+
+    analyzeCombatPatterns() {
+        // تحليل أنماط القتال
+        return {
+            preferredWeapons: this.getPreferredWeapons(),
+            tacticalChoices: this.analyzeTacticalDecisions(),
+            successRate: this.calculateCombatSuccess()
+        };
+    }
+
+    analyzeResourceUsage() {
+        // تحليل استخدام الموارد
+        return {
+            gatheringEfficiency: this.calculateGatheringEfficiency(),
+            resourcePreferences: this.identifyResourcePreferences(),
+            managementStyle: this.analyzeManagementStyle()
+        };
+    }
+
+    analyzeSocialBehavior() {
+        // تحليل السلوك الاجتماعي
+        return {
+            cooperationRate: this.calculateCooperationRate(),
+            tradingPatterns: this.analyzeTrading(),
+            communicationStyle: this.analyzeCommunication()
+        };
+    }
+
+    async analyzePerformance() {
+        return {
+            successRate: this.calculateSuccessRate(),
+            adaptationSpeed: this.measureAdaptationSpeed(),
+            learningProgress: this.evaluateLearningProgress()
+        };
+    }
+
+    updateStrategies(patterns, performance) {
+        // تحديث استراتيجيات الذكاء الاصطناعي
+        this.updateCombatStrategies(patterns.combat);
+        this.updateResourceStrategies(patterns.resource);
+        this.updateSocialStrategies(patterns.social);
+        this.optimizePerformance(performance);
+    }
+
+    async applyLearning() {
+        // تطبيق ما تم تعلمه
+        await this.updateAIBehavior();
+        await this.adjustDifficulty();
+        await this.optimizeResources();
+        await this.enhanceSocialInteractions();
+    }
+
+    async updateAIBehavior() {
+        const currentStrategies = Array.from(this.learningData.strategies.values());
+        const bestStrategies = this.selectBestStrategies(currentStrategies);
+        
+        for (const strategy of bestStrategies) {
+            await this.implementStrategy(strategy);
+        }
+    }
+
+    selectBestStrategies(strategies) {
+        return strategies.filter(strategy => 
+            strategy.successRate > 0.7 && 
+            strategy.adaptationSpeed > 0.5
+        );
+    }
+
+    async implementStrategy(strategy) {
+        try {
+            // تنفيذ الاستراتيجية
+            await this.updateGameLogic(strategy);
+            await this.updateAIResponses(strategy);
+            await this.optimizePerformance(strategy);
+
+            // تسجيل نجاح التنفيذ
+            this.learningData.performance.success++;
+        } catch (error) {
+            console.error('خطأ في تنفيذ الاستراتيجية:', error);
+            this.learningData.performance.failure++;
+        }
+    }
+
+    saveLearningProgress() {
+        const dataToSave = {
+            patterns: Array.from(this.learningData.patterns.entries()),
+            strategies: Array.from(this.learningData.strategies.entries()),
+            performance: this.learningData.performance,
+            lastUpdate: Date.now()
+        };
+
+        localStorage.setItem('aiLearningData', JSON.stringify(dataToSave));
+    }
+
+    getLatestUpdates() {
+        return {
+            patterns: Array.from(this.learningData.patterns.entries()),
+            performance: this.learningData.performance,
+            lastUpdate: this.lastUpdate
+        };
     }
 }
 
-// تصدير النظام
-export default SelfLearningAI;
+export { SelfLearningAI };

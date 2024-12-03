@@ -15,32 +15,47 @@ jobs:
     steps:
       - uses: actions/checkout@v2
       
-      - name: Setup Node.js
-        uses: actions/setup-node@v2
+      - name: Set up Python
+        uses: actions/setup-python@v2
         with:
-          node-version: '16'
+          python-version: '3.9'
           
-      - name: Install Dependencies
+      - name: Install System Dependencies
         run: |
-          npm install
+          sudo apt-get update
+          sudo apt-get install -y libgl1-mesa-dev xvfb python3-opengl
           
-      - name: Build Game
+      - name: Install Python Dependencies
         run: |
-          npm run build
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          
+      - name: Setup Virtual Display
+        run: |
+          Xvfb :99 -screen 0 1024x768x24 > /dev/null 2>&1 &
+          echo "DISPLAY=:99.0" >> $GITHUB_ENV
+          
+      - name: Build Game Assets
+        run: |
+          python scripts/build_assets.py
           
       - name: Run Tests
         run: |
-          npm test
+          python -m pytest tests/
+          
+      - name: Build Game
+        run: |
+          pyinstaller --onefile --add-data "assets:assets" --add-data "graphics:graphics" main.py
           
       - name: Optimize Assets
         run: |
-          npm run optimize
+          python scripts/optimize_assets.py
           
       - name: Deploy to GitHub Pages
         uses: JamesIves/github-pages-deploy-action@4.1.4
         with:
           branch: gh-pages
-          folder: public
+          folder: dist
           
       - name: Update Game Version
         run: |
@@ -65,5 +80,11 @@ jobs:
             - تحسين سلوك الشخصيات
             - تحديث أنماط اللعب
             - تحسين التوازن
+            
+            ✨ التحديثات:
+            - إضافة رسوميات متقدمة ثلاثية الأبعاد
+            - تحسين الأداء والواقعية
+            - إضافة تأثيرات بصرية جديدة
+            - تحسين نظام الذكاء الاصطناعي
           draft: false
           prerelease: false
