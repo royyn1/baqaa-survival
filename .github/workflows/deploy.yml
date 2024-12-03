@@ -1,0 +1,90 @@
+name: Deploy Game
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+  # يسمح بالتشغيل اليدوي
+  workflow_dispatch:
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - uses: actions/checkout@v2
+      
+      - name: Set up Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: '3.9'
+          
+      - name: Install System Dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libgl1-mesa-dev xvfb python3-opengl
+          
+      - name: Install Python Dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          
+      - name: Setup Virtual Display
+        run: |
+          Xvfb :99 -screen 0 1024x768x24 > /dev/null 2>&1 &
+          echo "DISPLAY=:99.0" >> $GITHUB_ENV
+          
+      - name: Build Game Assets
+        run: |
+          python scripts/build_assets.py
+          
+      - name: Run Tests
+        run: |
+          python -m pytest tests/
+          
+      - name: Build Game
+        run: |
+          pyinstaller --onefile --add-data "assets:assets" --add-data "graphics:graphics" main.py
+          
+      - name: Optimize Assets
+        run: |
+          python scripts/optimize_assets.py
+          
+      - name: Deploy to GitHub Pages
+        uses: JamesIves/github-pages-deploy-action@4.1.4
+        with:
+          branch: gh-pages
+          folder: dist
+          
+      - name: Update Game Version
+        run: |
+          echo "GAME_VERSION=$(date +'%Y.%m.%d.%H%M')" >> $GITHUB_ENV
+          
+      - name: Create Release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: v${{ env.GAME_VERSION }}
+          release_name: Release ${{ env.GAME_VERSION }}
+          body: |
+            تحديث جديد للعبة
+            
+            تحديثات تلقائية:
+            - تحسينات في الأداء
+            - محتوى جديد
+            - إصلاحات وتحسينات
+            
+            تحسينات الذكاء الاصطناعي:
+            - تحسين سلوك الشخصيات
+            - تحديث أنماط اللعب
+            - تحسين التوازن
+            
+            ✨ التحديثات:
+            - إضافة رسوميات متقدمة ثلاثية الأبعاد
+            - تحسين الأداء والواقعية
+            - إضافة تأثيرات بصرية جديدة
+            - تحسين نظام الذكاء الاصطناعي
+          draft: false
+          prerelease: false
