@@ -1,0 +1,41 @@
+{
+  "name": "survival-game",
+  "version": "1.0.0",
+  "description": "لعبة بقاء ثلاثية الأبعاد",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "pack": "electron-builder --dir",
+    "dist": "electron-builder"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "express": "^4.18.2",
+    "three": "^0.159.0"
+  },
+  "devDependencies": {
+    "electron": "^25.9.8",
+    "electron-builder": "^24.9.1"
+  },
+  "build": {
+    "appId": "com.survival.game",
+    "productName": "Survival Game",
+    "directories": {
+      "output": "dist"
+    },
+    "win": {
+      "target": "portable"
+    },
+    "files": [
+      "**/*",
+      "!**/.vscode/*",
+      "!**/node_modules/.bin/*",
+      "build/**/*",
+      "public/**/*",
+      "main.js",
+      "package.json"
+    ],
+    "asar": false
+  }
+}

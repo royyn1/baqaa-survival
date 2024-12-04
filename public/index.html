@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>لعبة البقاء</title>
+    <style>
+        body { 
+            margin: 0; 
+            overflow: hidden; 
+            background-color: #000; 
+        }
+        canvas { 
+            display: block; 
+        }
+        #debug { 
+            position: fixed; 
+            top: 10px; 
+            right: 10px; 
+            color: white; 
+            font-family: monospace;
+            background: rgba(0,0,0,0.5);
+            padding: 10px;
+            border-radius: 5px;
+            z-index: 1000;
+        }
+        #controls {
+            position: fixed;
+            bottom: 10px;
+            right: 10px;
+            color: white;
+            font-family: monospace;
+            background: rgba(0,0,0,0.5);
+            padding: 10px;
+            border-radius: 5px;
+            z-index: 1000;
+            direction: rtl;
+            text-align: right;
+        }
+        #error {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: red;
+            font-family: monospace;
+            background: rgba(0,0,0,0.8);
+            padding: 20px;
+            border-radius: 5px;
+            z-index: 2000;
+            display: none;
+            text-align: center;
+            white-space: pre-line;
+        }
+    </style>
+</head>
+<body>
+    <div id="debug">جاري التحميل...</div>
+    <div id="controls" style="display: none;">
+        التحكم:<br>
+        - النقر والسحب: تدوير الكاميرا<br>
+        - عجلة الماوس: تقريب/تبعيد<br>
+        - النقر الأيمن والسحب: تحريك
+    </div>
+    <div id="error"></div>
+
+    <script type="module">
+        function showError(message) {
+            const error = document.getElementById('error');
+            error.style.display = 'block';
+            error.textContent = message;
+            document.getElementById('debug').style.display = 'none';
+            document.getElementById('controls').style.display = 'none';
+            console.error(message);
+        }
+
+        window.onerror = function(msg, url, line) {
+            showError(`حدث خطأ في تشغيل اللعبة:\n${msg}\nالسطر: ${line}`);
+            return false;
+        };
+
+        import * as THREE from 'https://unpkg.com/three@0.159.0/build/three.module.js';
+        import { OrbitControls } from 'https://unpkg.com/three@0.159.0/examples/jsm/controls/OrbitControls.js';
+
+        // جعل THREE متاحاً عالمياً
+        window.THREE = THREE;
+        window.OrbitControls = OrbitControls;
+
+        // تحميل ملف اللعبة
+        import('./js/game.js')
+            .catch(error => showError('فشل في تحميل ملف اللعبة: ' + error.message));
+    </script>
+</body>
+</html>
