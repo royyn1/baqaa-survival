@@ -1,6 +1,8 @@
-import AdvancedGraphics from './public/js/advanced_graphics.js';
-import { AISystem } from './ai_system.js';
-import { OnlineLearning } from './ai_online_learning.js';
+// استيراد المكتبات والوحدات
+import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.159.0/build/three.module.js';
+import { OrbitControls } from 'https://cdn.jsdelivr.net/npm/three@0.159.0/examples/jsm/controls/OrbitControls.js';
+import { AISystem } from './ai/ai_system.js';
+import { OnlineLearning } from './ai/ai_online_learning.js';
 
 class Game {
     constructor() {
@@ -36,22 +38,63 @@ class Game {
                 throw new Error('لم يتم العثور على عنصر Canvas');
             }
 
-            this.graphics = new AdvancedGraphics(this.canvas, {
+            // إعداد المحرك
+            this.renderer = new THREE.WebGLRenderer({ 
                 antialias: true,
                 alpha: true,
                 powerPreference: 'high-performance'
             });
+            this.renderer.setSize(window.innerWidth, window.innerHeight);
+            this.renderer.setPixelRatio(window.devicePixelRatio);
+            this.canvas.appendChild(this.renderer.domElement);
 
+            // إعداد المشهد
+            this.scene = new THREE.Scene();
+            
             // إعداد الكاميرا
-            const camera = this.graphics.getCamera();
-            camera.position.set(0, 10, 20);
-            camera.lookAt(0, 0, 0);
+            this.camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+            this.camera.position.set(0, 10, 20);
+            this.camera.lookAt(0, 0, 0);
+
+            // إعداد التحكم
+            this.controls = new OrbitControls(this.camera, this.renderer.domElement);
+            this.controls.enableDamping = true;
+            this.controls.dampingFactor = 0.05;
 
             // إعداد الإضاءة
             this.setupLighting();
 
+            // إضافة معالج تغيير حجم النافذة
+            window.addEventListener('resize', () => this.onWindowResize(), false);
+
         } catch (error) {
             console.error('خطأ في تهيئة الرسوميات:', error);
+            throw error;
+        }
+    }
+
+    onWindowResize() {
+        this.camera.aspect = window.innerWidth / window.innerHeight;
+        this.camera.updateProjectionMatrix();
+        this.renderer.setSize(window.innerWidth, window.innerHeight);
+    }
+
+    setupLighting() {
+        try {
+            // إضاءة محيطية
+            const ambientLight = new THREE.AmbientLight(0x404040, 0.5);
+            this.scene.add(ambientLight);
+            
+            // إضاءة موجهة (الشمس)
+            const directionalLight = new THREE.DirectionalLight(0xffffff, 1.0);
+            directionalLight.position.set(50, 200, 100);
+            directionalLight.castShadow = true;
+            this.scene.add(directionalLight);
+            
+            // إعدادات الظل
+            this.configureShadows(directionalLight);
+        } catch (error) {
+            console.error('خطأ في إعداد الإضاءة:', error);
             throw error;
         }
     }
@@ -83,24 +126,6 @@ class Game {
         }
     }
 
-    setupLighting() {
-        try {
-            // إضاءة محيطية
-            const ambientLight = this.graphics.createAmbientLight(0x404040, 0.5);
-            
-            // إضاءة موجهة (الشمس)
-            const directionalLight = this.graphics.createDirectionalLight(0xffffff, 1.0);
-            directionalLight.position.set(50, 200, 100);
-            directionalLight.castShadow = true;
-            
-            // إعدادات الظل
-            this.configureShadows(directionalLight);
-        } catch (error) {
-            console.error('خطأ في إعداد الإضاءة:', error);
-            throw error;
-        }
-    }
-
     configureShadows(light) {
         light.shadow.mapSize.width = 2048;
         light.shadow.mapSize.height = 2048;
@@ -123,7 +148,7 @@ class Game {
             this.updateAI(deltaTime);
             
             // تحديث الرسوميات
-            this.graphics.render();
+            this.renderer.render(this.scene, this.camera);
             
         } catch (error) {
             console.error('خطأ في حلقة التحديث:', error);
@@ -169,7 +194,7 @@ class Game {
     }
 
     updateLightIntensity() {
-        const directionalLight = this.graphics.getDirectionalLight();
+        const directionalLight = this.scene.getObjectByProperty('type', 'DirectionalLight');
         if (directionalLight) {
             // حساب شدة الإضاءة بناءً على وقت اليوم
             const intensity = this.calculateDayLightIntensity(this.timeOfDay);
@@ -243,3 +268,6 @@ window.onload = () => {
         }
     }
 };
+
+// تصدير الفئة
+export default Game;
