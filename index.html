@@ -3,110 +3,36 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>·⁄»… «·»ﬁ«¡</title>
-    <!--  Õ„Ì· «·„ﬂ »«  -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/EffectComposer.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/RenderPass.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/ShaderPass.js"></script>
-    <!--  Õ„Ì· „·›«  «··⁄»… -->
-    <script src="public/js/advanced_graphics.js" type="module"></script>
-    <script src="game.js" type="module"></script>
+    <title>Baqaa Survival</title>
     <style>
-        body {
-            margin: 0;
-            overflow: hidden;
-            font-family: Arial, sans-serif;
-        }
-        #gameCanvas {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-        }
-        #ui {
-            position: absolute;
+        body { margin: 0; overflow: hidden; background: #000; }
+        #stats {
+            position: fixed;
             top: 10px;
             right: 10px;
             color: white;
-            text-shadow: 1px 1px 2px black;
-        }
-        #chat {
-            position: absolute;
-            bottom: 10px;
-            left: 10px;
-            width: 300px;
-            display: none;
-        }
-        #chat-messages {
-            height: 200px;
-            overflow-y: auto;
-            background: rgba(0, 0, 0, 0.5);
-            color: white;
+            background: rgba(0,0,0,0.5);
             padding: 10px;
-            margin-bottom: 5px;
             border-radius: 5px;
         }
-        #chat-input {
-            width: 100%;
-            padding: 5px;
-            border-radius: 3px;
-            border: none;
-        }
-        #mobile-controls {
-            position: absolute;
-            bottom: 20px;
-            right: 20px;
-            display: none;
-        }
-        @media (max-width: 768px) {
-            #mobile-controls {
-                display: block;
-            }
-        }
-        .control-btn {
-            width: 50px;
-            height: 50px;
-            background: rgba(255, 255, 255, 0.5);
-            border: none;
-            border-radius: 25px;
-            margin: 5px;
-            font-size: 20px;
-            color: white;
-            text-shadow: 1px 1px 2px black;
-        }
     </style>
-    <!-- ÿ•ÿ∂ÿßŸÅÿ© ŸÖŸÉÿ™ÿ®ÿßÿ™ ÿßŸÑÿ±ÿ≥ŸàŸÖŸäÿßÿ™ -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/gl-matrix/2.8.1/gl-matrix-min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script async src="https://unpkg.com/es-module-shims@1.8.0/dist/es-module-shims.js"></script>
+    <script type="importmap">
+    {
+        "imports": {
+            "three": "https://unpkg.com/three@0.159.0/build/three.module.js",
+            "three/addons/": "https://unpkg.com/three@0.159.0/examples/jsm/"
+        }
+    }
+    </script>
 </head>
 <body>
-    <canvas id="gameCanvas"></canvas>
-    
-    <div id="ui">
-        <div>ÿßŸÑÿÆÿ¥ÿ®: <span id="wood">0</span></div>
-        <div>ÿßŸÑŸÖÿπÿØŸÜ: <span id="metal">0</span></div>
-        <div>ÿßŸÑÿ∑ÿπÿßŸÖ: <span id="food">0</span></div>
+    <div id="stats">
+        <div>Health: <span id="health">100</span></div>
+        <div>Wood: <span id="wood">0</span></div>
+        <div>Metal: <span id="metal">0</span></div>
+        <div>Food: <span id="food">0</span></div>
     </div>
-    
-    <div id="chat">
-        <div id="chat-messages"></div>
-        <input type="text" id="chat-input" placeholder="ÿßŸÉÿ™ÿ® ÿ±ÿ≥ÿßŸÑÿ™ŸÉ ŸáŸÜÿß...">
-    </div>
-    
-    <div id="mobile-controls">
-        <button id="up" class="control-btn">‚Üë</button>
-        <button id="down" class="control-btn">‚Üì</button>
-        <button id="left" class="control-btn">‚Üê</button>
-        <button id="right" class="control-btn">‚Üí</button>
-        <button id="action" class="control-btn">‚ö°</button>
-    </div>
-
-    <!-- ÿ™ÿ≠ŸÖŸäŸÑ ÿ≥ŸÉÿ±ÿ®ÿ™ÿßÿ™ ÿßŸÑŸÑÿπÿ®ÿ© -->
-    <script type="module" src="game.js"></script>
+    <script type="module" src="public/js/game.js"></script>
 </body>
 </html>
-
