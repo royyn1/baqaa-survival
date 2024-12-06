@@ -3,11 +3,18 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>لعبة البقاء</title>
+    <title>لعبة البقاء - Baqaa Survival</title>
     
-    <!-- Three.js -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/0.159.0/three.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/three@0.159.0/examples/js/controls/OrbitControls.js"></script>
+    <!-- Three.js from official CDN -->
+    <script async src="https://ga.jspm.io/npm:es-module-shims@1.8.0/dist/es-module-shims.js"></script>
+    <script type="importmap">
+    {
+        "imports": {
+            "three": "https://unpkg.com/three@0.159.0/build/three.module.js",
+            "three/addons/": "https://unpkg.com/three@0.159.0/examples/jsm/"
+        }
+    }
+    </script>
     
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -18,6 +25,7 @@
             padding: 0;
             overflow: hidden;
             background: #000;
+            font-family: Arial, sans-serif;
         }
         #gameCanvas {
             width: 100% !important;
@@ -29,12 +37,12 @@
             top: 10px;
             right: 10px;
             color: white;
-            font-family: Arial, sans-serif;
             text-shadow: 1px 1px 2px black;
             background: rgba(0, 0, 0, 0.5);
             padding: 10px;
             border-radius: 5px;
             direction: rtl;
+            z-index: 100;
         }
         #error-message {
             display: none;
@@ -42,93 +50,158 @@
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
-            background: rgba(255,0,0,0.8);
+            background: rgba(255, 0, 0, 0.8);
             color: white;
             padding: 20px;
             border-radius: 5px;
             text-align: center;
             direction: rtl;
+            z-index: 1000;
+            max-width: 80%;
+        }
+        #loading {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: white;
+            font-size: 24px;
+            text-align: center;
+            z-index: 1000;
+        }
+        .stat {
+            margin: 5px 0;
+            display: flex;
+            justify-content: space-between;
+            gap: 10px;
+        }
+        .stat-value {
+            font-weight: bold;
         }
     </style>
 </head>
 <body>
+    <div id="loading">جاري تحميل اللعبة...</div>
     <canvas id="gameCanvas"></canvas>
     <div id="ui">
-        <div>الصحة: <span id="health">100</span></div>
-        <div>الخشب: <span id="wood">0</span></div>
-        <div>المعدن: <span id="metal">0</span></div>
-        <div>الطعام: <span id="food">0</span></div>
+        <div class="stat">
+            <span>الصحة:</span>
+            <span class="stat-value" id="health">100</span>
+        </div>
+        <div class="stat">
+            <span>الخشب:</span>
+            <span class="stat-value" id="wood">0</span>
+        </div>
+        <div class="stat">
+            <span>المعدن:</span>
+            <span class="stat-value" id="metal">0</span>
+        </div>
+        <div class="stat">
+            <span>الطعام:</span>
+            <span class="stat-value" id="food">0</span>
+        </div>
     </div>
     <div id="error-message"></div>
 
-    <script>
-        // تهيئة المشهد
-        const scene = new THREE.Scene();
-        scene.background = new THREE.Color(0x87ceeb);
+    <script type="module">
+        import * as THREE from 'three';
 
-        // تهيئة الكاميرا
-        const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-        camera.position.set(0, 5, 10);
-
-        // تهيئة المحرك
-        const renderer = new THREE.WebGLRenderer({ 
-            canvas: document.getElementById('gameCanvas'),
-            antialias: true 
-        });
-        renderer.setSize(window.innerWidth, window.innerHeight);
-        renderer.shadowMap.enabled = true;
-
-        // إعداد التحكم
-        const controls = new THREE.OrbitControls(camera, renderer.domElement);
-        controls.enableDamping = true;
-        controls.dampingFactor = 0.05;
-
-        // إضاءة محيطية
-        const ambientLight = new THREE.AmbientLight(0x404040);
-        scene.add(ambientLight);
-
-        // إضاءة موجهة (الشمس)
-        const directionalLight = new THREE.DirectionalLight(0xffffff, 1);
-        directionalLight.position.set(5, 5, 5);
-        directionalLight.castShadow = true;
-        scene.add(directionalLight);
-
-        // إنشاء الأرض
-        const groundGeometry = new THREE.PlaneGeometry(20, 20);
-        const groundMaterial = new THREE.MeshStandardMaterial({ 
-            color: 0x228B22,
-            side: THREE.DoubleSide
-        });
-        const ground = new THREE.Mesh(groundGeometry, groundMaterial);
-        ground.rotation.x = Math.PI / 2;
-        ground.receiveShadow = true;
-        scene.add(ground);
-
-        // معالج تغيير حجم النافذة
-        window.addEventListener('resize', () => {
-            camera.aspect = window.innerWidth / window.innerHeight;
-            camera.updateProjectionMatrix();
-            renderer.setSize(window.innerWidth, window.innerHeight);
-        });
-
-        // معالجة الأخطاء
-        window.addEventListener('error', (event) => {
-            console.error('خطأ في اللعبة:', event.error);
-            const errorMessage = document.getElementById('error-message');
-            if (errorMessage) {
-                errorMessage.textContent = 'حدث خطأ في اللعبة: ' + event.error.message;
-                errorMessage.style.display = 'block';
+        // الدوال المساعدة
+        function showError(message) {
+            const loading = document.getElementById('loading');
+            const errorElement = document.getElementById('error-message');
+            if (loading) loading.style.display = 'none';
+            if (errorElement) {
+                errorElement.textContent = message;
+                errorElement.style.display = 'block';
             }
-        });
-
-        // حلقة الرسم
-        function animate() {
-            requestAnimationFrame(animate);
-            controls.update();
-            renderer.render(scene, camera);
+            console.error(message);
         }
 
-        animate();
+        function hideLoading() {
+            const loading = document.getElementById('loading');
+            if (loading) loading.style.display = 'none';
+        }
+
+        // تهيئة اللعبة
+        async function initGame() {
+            try {
+                // تهيئة المشهد
+                const scene = new THREE.Scene();
+                scene.background = new THREE.Color(0x87ceeb); // لون السماء
+
+                // تهيئة الكاميرا
+                const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+                camera.position.set(0, 5, 10);
+
+                // تهيئة المحرك
+                const renderer = new THREE.WebGLRenderer({ 
+                    canvas: document.getElementById('gameCanvas'),
+                    antialias: true 
+                });
+                renderer.setSize(window.innerWidth, window.innerHeight);
+                renderer.shadowMap.enabled = true;
+                renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+
+                // إضاءة محيطية
+                const ambientLight = new THREE.AmbientLight(0x404040, 0.5);
+                scene.add(ambientLight);
+
+                // إضاءة موجهة (الشمس)
+                const directionalLight = new THREE.DirectionalLight(0xffffff, 1);
+                directionalLight.position.set(5, 5, 5);
+                directionalLight.castShadow = true;
+                directionalLight.shadow.mapSize.width = 1024;
+                directionalLight.shadow.mapSize.height = 1024;
+                scene.add(directionalLight);
+
+                // إنشاء الأرض
+                const groundGeometry = new THREE.PlaneGeometry(100, 100);
+                const groundMaterial = new THREE.MeshStandardMaterial({ 
+                    color: 0x228B22,
+                    side: THREE.DoubleSide,
+                    roughness: 0.8,
+                    metalness: 0.2
+                });
+                const ground = new THREE.Mesh(groundGeometry, groundMaterial);
+                ground.rotation.x = -Math.PI / 2;
+                ground.receiveShadow = true;
+                scene.add(ground);
+
+                // معالج تغيير حجم النافذة
+                window.addEventListener('resize', () => {
+                    camera.aspect = window.innerWidth / window.innerHeight;
+                    camera.updateProjectionMatrix();
+                    renderer.setSize(window.innerWidth, window.innerHeight);
+                });
+
+                // حلقة الرسم
+                function animate() {
+                    requestAnimationFrame(animate);
+                    renderer.render(scene, camera);
+                }
+
+                // بدء الرسم
+                hideLoading();
+                animate();
+
+            } catch (error) {
+                showError('حدث خطأ أثناء تهيئة اللعبة: ' + error.message);
+            }
+        }
+
+        // بدء اللعبة عند تحميل الصفحة
+        window.addEventListener('load', () => {
+            console.log('تم تحميل الصفحة');
+            if (typeof THREE === 'undefined') {
+                showError('فشل في تحميل Three.js');
+                return;
+            }
+            console.log('تم تحميل Three.js بنجاح');
+            initGame().catch(error => {
+                showError('حدث خطأ غير متوقع: ' + error.message);
+            });
+        });
     </script>
 </body>
 </html>
