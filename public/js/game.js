@@ -3,7 +3,8 @@
 import GameEvolution from '../ai/game_evolution.js';
 import GameIntegration from '../ai/integration.js';
 import AutonomousAI from '../ai/autonomous_ai.js';
-import * as THREE from 'three';
+import * as THREE from 'https://unpkg.com/three@0.159.0/build/three.module.js';
+import { OrbitControls } from 'https://unpkg.com/three@0.159.0/examples/jsm/controls/OrbitControls.js';
 import TWEEN from '@tweenjs/tween.js';
 
 class BaqaaGame {
