@@ -1,10 +1,10 @@
 // BAQAA Game - Core Game Logic
 
-import GameEvolution from '../ai/game_evolution.js';
-import GameIntegration from '../ai/integration.js';
-import AutonomousAI from '../ai/autonomous_ai.js';
-import * as THREE from 'three';
-import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+import * as THREE from './libs/three.module.js';
+import { OrbitControls } from './libs/OrbitControls.js';
+import { GameEvolution } from '../ai/game_evolution.js';
+import { GameIntegration } from '../ai/integration.js';
+import { AutonomousAI } from '../ai/autonomous_ai.js';
 import TWEEN from '@tweenjs/tween.js';
 
 class BaqaaGame {
@@ -462,29 +462,52 @@ class BaqaaGame {
     }
 
     initCamera() {
+        this.scene = new THREE.Scene();
+        this.scene.background = new THREE.Color(0x87ceeb);
+
         this.camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-        this.updateCameraPosition();
+        this.camera.position.set(0, 5, 10);
+
+        this.renderer = new THREE.WebGLRenderer({ antialias: true });
+        this.renderer.setSize(window.innerWidth, window.innerHeight);
+        this.renderer.shadowMap.enabled = true;
+        document.body.appendChild(this.renderer.domElement);
+
+        this.controls = new OrbitControls(this.camera, this.renderer.domElement);
+        this.controls.enableDamping = true;
+        this.controls.dampingFactor = 0.05;
+
+        this.setupLighting();
+        this.createGround();
+        this.animate();
     }
 
-    updateCameraPosition() {
-        const offset = this.cameraOffset[this.currentView];
-        if (this.player) {
-            this.camera.position.x = this.player.position.x + offset.x;
-            this.camera.position.y = this.player.position.y + offset.y;
-            this.camera.position.z = this.player.position.z + offset.z;
-            
-            if (this.currentView === 'first') {
-                // منظور الشخص الأول
-                this.camera.lookAt(
-                    this.player.position.x + Math.sin(this.player.rotation.y),
-                    this.player.position.y + 1.6,
-                    this.player.position.z - Math.cos(this.player.rotation.y)
-                );
-            } else {
-                // منظور الشخص الثاني والثالث
-                this.camera.lookAt(this.player.position);
-            }
-        }
+    setupLighting() {
+        const ambientLight = new THREE.AmbientLight(0x404040);
+        this.scene.add(ambientLight);
+
+        const directionalLight = new THREE.DirectionalLight(0xffffff, 1);
+        directionalLight.position.set(5, 5, 5);
+        directionalLight.castShadow = true;
+        this.scene.add(directionalLight);
+    }
+
+    createGround() {
+        const geometry = new THREE.PlaneGeometry(20, 20);
+        const material = new THREE.MeshStandardMaterial({ 
+            color: 0x228B22,
+            side: THREE.DoubleSide
+        });
+        const ground = new THREE.Mesh(geometry, material);
+        ground.rotation.x = Math.PI / 2;
+        ground.receiveShadow = true;
+        this.scene.add(ground);
+    }
+
+    animate() {
+        requestAnimationFrame(() => this.animate());
+        this.controls.update();
+        this.renderer.render(this.scene, this.camera);
     }
 
     changeView(view) {
@@ -507,13 +530,6 @@ class BaqaaGame {
                 .easing(TWEEN.Easing.Quadratic.InOut)
                 .start();
         }
-    }
-
-    animate() {
-        requestAnimationFrame(() => this.animate());
-        TWEEN.update();
-        this.updateCameraPosition();
-        this.renderer.render(this.scene, this.camera);
     }
 
     get cameraOffset() {
