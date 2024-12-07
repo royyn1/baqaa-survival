@@ -6,7 +6,7 @@
     <title>لعبة البقاء - Baqaa Survival</title>
     
     <!-- تحميل Three.js من CDN -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r159/three.min.js"></script>
     
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -198,6 +198,25 @@
                 source: 'initialization'
             });
             throw new Error('Three.js not loaded');
+        }
+
+        // فحص دعم WebGL
+        try {
+            const canvas = document.createElement('canvas');
+            const gl = canvas.getContext('webgl') || canvas.getContext('experimental-webgl');
+            if (!gl) {
+                logger.logError({
+                    message: 'متصفحك لا يدعم WebGL. يرجى استخدام متصفح حديث.',
+                    source: 'initialization'
+                });
+                throw new Error('WebGL not supported');
+            }
+        } catch (e) {
+            logger.logError({
+                message: 'حدث خطأ أثناء فحص دعم WebGL',
+                error: e
+            });
+            throw e;
         }
 
         try {
