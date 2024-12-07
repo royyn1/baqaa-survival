@@ -5,6 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>لعبة البقاء - Baqaa Survival</title>
     
+    <!-- تحميل Three.js من CDN -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { 
@@ -62,6 +65,20 @@
             direction: rtl;
             z-index: 999;
         }
+        #debug {
+            position: fixed;
+            bottom: 10px;
+            left: 10px;
+            background: rgba(0, 0, 0, 0.7);
+            color: white;
+            padding: 10px;
+            border-radius: 5px;
+            font-family: monospace;
+            direction: ltr;
+            max-height: 200px;
+            overflow-y: auto;
+            z-index: 1000;
+        }
     </style>
 </head>
 <body>
@@ -86,7 +103,178 @@
         </div>
     </div>
     <div id="error-message"></div>
+    <div id="debug"></div>
 
-    <script type="module" src="src/game.js"></script>
+    <script>
+        // نظام تسجيل الأخطاء
+        class GameLogger {
+            constructor() {
+                this.logs = [];
+                this.errorContainer = document.getElementById('error-message');
+                this.debugContainer = document.getElementById('debug');
+                this.setupErrorHandling();
+            }
+
+            setupErrorHandling() {
+                window.onerror = (msg, url, lineNo, columnNo, error) => {
+                    this.logError({
+                        message: msg,
+                        source: url,
+                        line: lineNo,
+                        column: columnNo,
+                        error: error
+                    });
+                    return false;
+                };
+
+                window.addEventListener('unhandledrejection', (event) => {
+                    this.logError({
+                        message: 'Unhandled Promise Rejection',
+                        error: event.reason
+                    });
+                });
+            }
+
+            logError(errorInfo) {
+                const timestamp = new Date().toLocaleTimeString();
+                let errorMessage = `[${timestamp}] خطأ: ${errorInfo.message}`;
+                
+                if (errorInfo.source) {
+                    errorMessage += `\nالمصدر: ${errorInfo.source}`;
+                }
+                if (errorInfo.line) {
+                    errorMessage += `\nالسطر: ${errorInfo.line}`;
+                }
+                if (errorInfo.column) {
+                    errorMessage += `\nالعمود: ${errorInfo.column}`;
+                }
+                if (errorInfo.error && errorInfo.error.stack) {
+                    errorMessage += `\nتفاصيل الخطأ: ${errorInfo.error.stack}`;
+                }
+
+                this.logs.push(errorMessage);
+                this.showError(errorMessage);
+                this.updateDebug();
+                console.error(errorMessage);
+            }
+
+            logInfo(message) {
+                const timestamp = new Date().toLocaleTimeString();
+                const logMessage = `[${timestamp}] معلومة: ${message}`;
+                this.logs.push(logMessage);
+                this.updateDebug();
+                console.info(logMessage);
+            }
+
+            showError(message) {
+                if (this.errorContainer) {
+                    this.errorContainer.style.display = 'block';
+                    this.errorContainer.innerHTML = message.replace(/\n/g, '<br>');
+                }
+            }
+
+            updateDebug() {
+                if (this.debugContainer) {
+                    this.debugContainer.innerHTML = this.logs.slice(-10).join('<br>');
+                    this.debugContainer.scrollTop = this.debugContainer.scrollHeight;
+                }
+            }
+
+            clearError() {
+                if (this.errorContainer) {
+                    this.errorContainer.style.display = 'none';
+                    this.errorContainer.innerHTML = '';
+                }
+            }
+        }
+
+        // إنشاء مسجل الأخطاء
+        const logger = new GameLogger();
+
+        // التأكد من تحميل Three.js
+        if (typeof THREE === 'undefined') {
+            logger.logError({
+                message: 'لم يتم تحميل مكتبة Three.js',
+                source: 'initialization'
+            });
+            throw new Error('Three.js not loaded');
+        }
+
+        try {
+            logger.logInfo('بدء تهيئة اللعبة');
+
+            // تهيئة المشهد
+            logger.logInfo('تهيئة المشهد');
+            const scene = new THREE.Scene();
+            scene.background = new THREE.Color(0x87ceeb);
+
+            // تهيئة الكاميرا
+            logger.logInfo('تهيئة الكاميرا');
+            const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+            camera.position.set(0, 5, 10);
+            camera.lookAt(0, 0, 0);
+
+            // تهيئة المحرك
+            logger.logInfo('تهيئة محرك العرض');
+            const renderer = new THREE.WebGLRenderer({
+                canvas: document.querySelector('#gameCanvas'),
+                antialias: true
+            });
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            renderer.shadowMap.enabled = true;
+
+            // إضافة الإضاءة
+            logger.logInfo('إضافة الإضاءة');
+            const light = new THREE.DirectionalLight(0xffffff, 1);
+            light.position.set(5, 5, 5);
+            scene.add(light);
+            scene.add(new THREE.AmbientLight(0x404040));
+
+            // إضافة مكعب
+            logger.logInfo('إضافة المكعب');
+            const cube = new THREE.Mesh(
+                new THREE.BoxGeometry(),
+                new THREE.MeshPhongMaterial({ color: 0xff0000 })
+            );
+            cube.position.y = 0.5;
+            scene.add(cube);
+
+            // إضافة الأرض
+            logger.logInfo('إضافة الأرض');
+            const ground = new THREE.Mesh(
+                new THREE.PlaneGeometry(10, 10),
+                new THREE.MeshPhongMaterial({ color: 0x228B22 })
+            );
+            ground.rotation.x = -Math.PI / 2;
+            scene.add(ground);
+
+            // معالج تغيير حجم النافذة
+            window.addEventListener('resize', () => {
+                camera.aspect = window.innerWidth / window.innerHeight;
+                camera.updateProjectionMatrix();
+                renderer.setSize(window.innerWidth, window.innerHeight);
+                logger.logInfo('تم تحديث حجم النافذة');
+            });
+
+            // حلقة الرسم
+            function animate() {
+                requestAnimationFrame(animate);
+                cube.rotation.y += 0.01;
+                renderer.render(scene, camera);
+            }
+
+            // إخفاء شاشة التحميل وبدء الرسم
+            document.getElementById('loading').style.display = 'none';
+            logger.logInfo('بدء حلقة الرسم');
+            animate();
+
+        } catch (error) {
+            logger.logError({
+                message: 'خطأ في تهيئة اللعبة',
+                error: error
+            });
+            throw error;
+        }
+    </script>
 </body>
 </html>
