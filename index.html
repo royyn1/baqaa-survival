@@ -5,8 +5,18 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>لعبة البقاء - Baqaa Survival</title>
     
-    <!-- تحميل Three.js من CDN -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r159/three.min.js"></script>
+    <!-- إضافة Favicon -->
+    <link rel="icon" type="image/png" href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAJESURBVFhH7ZbPaxNBFMffJE3S/GraJGlJE0NpUQrSQ0XwIh78C7wKgngRBC+KB0/iyZMXL4IHD4IHD4J48iB48CL+A4IHQVpKKYKWaEia0DRtkk2aTfJmxt2ZzWaz2ew2m4sffgzz2Nmd9743b2aXkX+YlN+HxvGf8YhFxxhYLBZYXFyEYrEITqcTAoEAzM/PD9bpwefzwdraGiSTSahWqxAMBmF5eRmcTqdYp8fU1BSEw2EoFApQLBYhFArB6uoqOBwOsW5oGBqAm4xEIrC5uQm5XA4ymQykUimIxWLgdrvFej0GBqDhcDgMOzs7kE6nIZ/PQ7VShWQiCdFoVFqnx8AANBwKhSCRSEAqlRKG6XQGcrkcRCIRaZ0eAwNwk3Nzc7C1tQXxeFwYpVIpyGazkEwkIBKNSOv0MAxAw3Nzc7CxsQHb29uQTqehnC9DJBWBeDwurRvEwADcJN0DGxsbsLe3J4JQKBQgk81AMpWEeDImrdNjYAAa9vl8EIvFxJ5nMhnI5/JQKpWgWCpCLBGDaDQirdNjYABu0uv1ihNwd3cX9vf3oVQsQT6fF0HY29+DeCIurRtkYABqkp4DXq8X1tbWYHt7G7LZrLgY0ZNwf38fEsmEtE4PQwPcpNvthng8DgcHB+K2pNcxvRvSe4E+qOhDSVanh6EBatLlckEymRQBODw8FJciCgK9lOilKKvTw/AANEwvRgcHB+LypTciDQK9lGR1ehgagJp0Op3iKKZBoBcjDQK9GWV1evwGVGJhR8zKdG0AAAAASUVORK5CYII=">
+    
+    <!-- تحميل Three.js من المصدر الرسمي -->
+    <script async src="https://unpkg.com/es-module-shims@1.8.0/dist/es-module-shims.js"></script>
+    <script type="importmap">
+    {
+        "imports": {
+            "three": "https://unpkg.com/three@0.159.0/build/three.module.js"
+        }
+    }
+    </script>
     
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -105,7 +115,9 @@
     <div id="error-message"></div>
     <div id="debug"></div>
 
-    <script>
+    <script type="module">
+        import * as THREE from 'three';
+
         // نظام تسجيل الأخطاء
         class GameLogger {
             constructor() {
@@ -190,15 +202,6 @@
 
         // إنشاء مسجل الأخطاء
         const logger = new GameLogger();
-
-        // التأكد من تحميل Three.js
-        if (typeof THREE === 'undefined') {
-            logger.logError({
-                message: 'لم يتم تحميل مكتبة Three.js',
-                source: 'initialization'
-            });
-            throw new Error('Three.js not loaded');
-        }
 
         // فحص دعم WebGL
         try {
